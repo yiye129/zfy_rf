@@ -1,0 +1,5 @@
+*** Settings ***
+Suite Setup       CreateConversation
+Suite Teardown    DeleteConversation
+Resource          HTTP关键字.txt
+Resource          资源关键字.txt

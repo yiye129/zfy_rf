@@ -1,0 +1,137 @@
+*** Settings ***
+Library           Selenium2Library
+Library           String
+Resource          APP资源关键字.txt
+Library           RequestsLibrary
+Library           DatabaseLibrary
+Library           HttpLibrary.HTTP
+
+*** Keywords ***
+Http Post Requests
+    [Arguments]    ${contenttype}    ${bodydata}    ${url}
+    Comment    ${header}    Create Dictionary    Content-Type=${contenttype}
+    Comment    ${cookie}    Create Dictionary    JSESSIONID=${JSESSIONID}
+    #创建body数据（json格式）
+    ${data}    Set Variable    ${bodydata}
+    Log    ${data}
+    #创建一个http会话
+    Comment    Create Session    zfy    ${zfy_url}    headers=${header}    cookies=${cookie}
+    #发送post请求
+    ${responsedata}    Post Request    zfy    ${url}    data=${data}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${responsedata.status_code}    200
+    #格式转换成UTF-8
+    Comment    ${responsedata}    Decode Bytes To String    ${addr}    UTF-8
+    Comment    Delete All Sessions
+    [Return]    ${responsedata}
+
+SendGet_Recv200
+    [Arguments]    ${url}
+    [Documentation]    描述：把发送的get请求转换成UTF-8
+    ...
+    ...    ${jsessionid} 表示登录后的jsessionid
+    ...    ${url}表示发送get请求的url地址
+    ...
+    ...    返回的是响应数据
+    ...
+    ...    author：邱小叶
+    #创建头文件和cookie（字典型）
+    ${header}    Create Dictionary    Content-Type=application/json;charset=UTF-8
+    #发送
+    ${addr}    Get Request    zfy    ${url}    headers=${header}
+    log    ${addr.status_code}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${addr.status_code}    200
+    #转换成中文
+    ${responsedata}    Decode Bytes To String    ${addr.content}    UTF-8
+    [Return]    ${responsedata}
+
+SendPost_Recv200
+    [Arguments]    ${contenttype}    ${bodydata}    ${url}
+    [Documentation]    描述：把发送的post请求转换成UTF-8
+    ...
+    ...    ${jsessionid} 表示登录后的jsessionid
+    ...    ${url}表示发送get请求的url地址
+    ...
+    ...    返回的是响应数据
+    ...
+    ...    author：邱小叶
+    CreateConversation
+    #创建头文件和cookie（字典型）
+    ${header}    Create Dictionary    Content-Type=${contenttype}
+    #创建body数据（json格式）
+    ${data}    Set Variable    ${bodydata}
+    #发送post请求
+    ${addr}    Post Request    zfy    ${url}    data=${data}    headers=${header}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${addr.status_code}    200
+    #格式转换成UTF-8
+    ${responsedata}    Decode Bytes To String    ${addr.content}    UTF-8
+    [Return]    ${responsedata}
+
+SendDelete_Recv200
+    [Arguments]    ${url}
+    [Documentation]    描述：发送一个DELETE请求，返回response和响应状态
+    ...
+    ...    ${jsessionid} 表示登录后的jsessionid
+    ...    ${url}表示发送get请求的url地址
+    ...
+    ...    返回的是响应数据
+    ...
+    ...    author：邱小叶
+    #创建头文件和cookie（字典型）
+    ${header}    Create Dictionary    Content-Type=application/json;charset=UTF-8
+    #发送delete请求
+    ${addr}    Delete Request    zfy    ${url}    headers=${header}
+    log    ${addr.status_code}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${addr.status_code}    200
+    #格式转换成UTF-8
+    ${responsedata}    Decode Bytes To String    ${addr.content}    UTF-8
+    [Return]    ${responsedata}
+
+SendPut_Recv200
+    [Arguments]    ${contenttype}    ${bodydata}    ${url}
+    #创建头文件和cookie（字典型）
+    ${header}    Create Dictionary    Content-Type=${contenttype}
+    #创建body数据（json格式）
+    ${data}    Set Variable    ${bodydata}
+    #发送post请求
+    ${addr}    Put Request    zfy    ${url}    data=${data}    headers=${header}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${addr.status_code}    200
+    [Return]    ${addr.content}
+
+CreateConversation
+    ${header}    Create Dictionary    Content-Type=application/x-www-form-urlencoded; charset=UTF-8
+    ${cookie}    Create Dictionary    JSESSIONID=${JSESSIONID}
+    Comment    ${cookie}    Create Dictionary    JSESSIONID=${g_jsessionid}
+    log    ${cookie}
+    #创建一个http会话
+    Create Session    zfy    ${zfy_url}    headers=${header}    cookies=${cookie}
+
+DeleteConversation
+    Delete All Sessions
+
+获取cookies
+    #打开浏览器
+    Open Browser    ${zfy_url}
+    #输入用户名
+    Input Text    id=loginName    scott
+    #输入密码
+    Input Password    id=prepassword    123456
+    #输入验证码
+    Input Text    id=kaptchaCode    exee
+    #点击登录按钮
+    sleep    5
+    Click Button    id=btn-submit
+    #获取页面cookie
+    ${c}    Get Cookies
+    log    ${c}
+    #关闭浏览器
+    Close All Browsers
+    ${s}    Fetch From Left    ${c}    ;
+    ${s}    Fetch From right    ${s}    =
+    log    ${s}
+    Set Global Variable    ${g_jsessionid}    ${s}
+    log    ${g_jsessionid}

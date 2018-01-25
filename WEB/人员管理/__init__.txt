@@ -1,0 +1,2 @@
+*** Settings ***
+Resource          ../HTTP关键字.txt

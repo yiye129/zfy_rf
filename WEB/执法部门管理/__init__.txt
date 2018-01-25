@@ -1,0 +1,13 @@
+*** Settings ***
+Suite Setup       add_executorgroup_data
+Suite Teardown    del_executorgroup_data
+Library           Selenium2Library
+Library           String
+Resource          ../资源关键字.txt
+Library           RequestsLibrary
+Library           DatabaseLibrary
+Library           HttpLibrary.HTTP
+Resource          ../HTTP关键字.txt
+Library           Collections
+
+*** Keywords ***

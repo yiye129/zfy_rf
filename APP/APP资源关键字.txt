@@ -1,0 +1,16 @@
+*** Variables ***
+${zfy_url}        ${本机服务器}
+${JSESSIONID}     ${本机JSESSIONID}
+${DB_Name}        zfy-source    #数据库名称
+${DB_UserName}    root    #数据库用户名
+${DB_Pwd}         ${EMPTY}    #数据库访问密码
+${DB_Host}        192.168.0.137    #数据库IP地址
+${DB_Port}        3306    #数据库端口
+${zfy_app_info}    zfy_app_info    #白名单数据库
+${zfy_app_apply_info}    zfy_app_apply_info
+${zfy_system_version}    zfy_system_version
+${本机服务器}          http://192.168.0.137:6060    #本机服务器
+${外网服务器}          http://220.167.53.142:6060    #外网服务器
+${外网JSESSIONID}    B02E73B7402CE7F26DDCD635AF7260C6
+${本机JSESSIONID}    0E179B5E471A1E8CFAB7F3931AC5880E
+${zfy_context}    zfy_context

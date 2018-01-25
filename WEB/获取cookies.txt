@@ -1,0 +1,50 @@
+*** Settings ***
+Library           Selenium2Library
+Library           String
+Resource          资源关键字.txt
+Library           RequestsLibrary
+Library           DatabaseLibrary
+Library           HttpLibrary.HTTP
+Resource          HTTP关键字.txt
+Library           results/createReportContent.py
+Library           results/sendmail.py
+
+*** Test Cases ***
+login
+    #打开浏览器
+    Open Browser    ${zfy_url}
+    #输入用户名
+    Input Text    id=loginName    scott
+    #输入密码
+    Input Password    id=prepassword    123456
+    #输入验证码
+    Input Text    id=kaptchaCode    exee
+    #点击登录按钮
+    sleep    10
+    Click Button    id=btn-submit
+    #获取页面cookie
+    ${c}    Get Cookies
+    log    ${c}
+    #关闭浏览器
+    Close All Browsers
+    @{s}    Split String    ${c}    =
+    Log Many    @{s}[1]
+    Comment    set global variable    ${JSESSIONID}    @{s}[1]
+
+sendmail
+    sleep    10
+    ${openfile}    set variable    D://RF//zfy//results//report.html
+    ${attr1}    set variable    D://RF//zfy//results//log.html
+    open browser    ${openfile}    chrome
+    sleep    3
+    ${detailContent}=    get text    xpath=html/body/table
+    ${totalContent}=    get text    id=total-stats
+    ${tagContent}=    get text    id=tag-stats
+    ${suitContent}=    get text    id=suite-stats
+    ${total}=    get text    xpath=.//*[@id='total-stats']/tbody/tr[1]/td[2]
+    ${pass}=    get text    xpath=.//*[@id='total-stats']/tbody/tr[1]/td[3]
+    ${percentage}=    Evaluate    format(round(${pass}/float(${total}),2),'2%')
+    createReportContent    ${detailContent}=    ${totalContent}=    ${tagContent}=    ${suitContent}=    ${percentage}=    ${attr1}
+    close browser
+    sleep    3
+    send mail    ${attr1}    ${attr1}    ${openfile}

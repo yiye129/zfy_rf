@@ -1,0 +1,20 @@
+*** Settings ***
+Library           DatabaseLibrary
+
+*** Variables ***
+&{DatabaseInfor}    DatabaseName=zfy-source    DatabaseUser=root    Databasepassword=${EMPTY}    DatabaseIp=192.168.0.107    DatabasePort=3306    #数据库名称|数据库用户名|数据库密码|数据库ip地址|数据库端口
+${DB_Name}        zfy-source    #数据库名称
+${DB_UserName}    root    #数据库用户名
+${DB_Pwd}         ${EMPTY}    #数据库访问密码
+${DB_Host}        192.168.0.107    #数据库IP地址
+${DB_Port}        3306    #数据库端口
+${table_user}     admin_user    #用户数据表
+
+*** Test Cases ***
+Connect_Database
+    connect to database    pymysql    ${DB_Name}    ${DB_UserName}    ${DB_Pwd}    ${DB_Host}    ${DB_Port}
+
+Add_Database_Data
+    ${result}    Query    select \ * \ from \ ${table_user} \ where login_username like \ '%test_%'
+    log    ${result}
+    Execute Sql String    delete from \ ${table_user} \ where login_username like \ '%test_%'

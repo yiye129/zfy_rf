@@ -1,0 +1,22 @@
+*** Settings ***
+Resource          ../HTTP关键字.txt
+
+*** Keywords ***
+查看列表
+    [Arguments]    ${pageSize}
+    #查看人员管理列表
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=${pageSize}&keywords=    /system/user/search
+    ${row_number}    row count    select * \ from \ \ ${table_user} where company_id=4
+    ${total}    get json value    ${resp}    /total
+    should be equal as strings    ${total}    ${row_number}
+
+添加人员
+    [Arguments]    ${resp_result}    &{user_info}    # loginUsername|realName|password|boundCellphone
+    Comment    #获取一个随机账户名
+    Comment    ${loginUsername}    generate random string    6    [LETTERS][NUMBERS]
+    Comment    set suite variable    ${loginUsername}    test_${loginUsername}
+    Comment    ${password}    generate random string    6    [NUMBERS]
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=&loginUsername=${user_info['loginName']}&realName=${user_info['realName']}&password=${user_info['password']}&type=1&boundCellphone=${user_info['boundCellphone']}&hireStatus=0&leaderLevel=0&executorgroupName=&canExecute=1&description=&canIntercom=1&level=9    /system/user/edit
+    json value should equal    ${resp}    /success    ${resp_result}
+    Comment    ${s_user_id}    get json value    ${resp}    /data/id
+    Comment    set suite variable    ${s_user_id}    ${s_user_id}

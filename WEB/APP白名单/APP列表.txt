@@ -1,0 +1,49 @@
+*** Settings ***
+Resource          ../HTTP关键字.txt
+
+*** Test Cases ***
+APP列表查看
+    #查看APP列表列表
+    SendGet_Recv200    /appwhitelist
+
+添加APP列表
+    #获取一个随机账户名
+    ${AppName}    generate random string    6    [LETTERS][NUMBERS]
+    set suite variable    ${AppName}    测试创建账户:${AppName}
+    ${PackagePath}    generate random string    9    [LETTERS][NUMBERS]
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=&appName=${AppName}&packagePath=${PackagePath}&securityMd5=1&appType=0&useStatus=0&description=    /appwhitelist/edit
+    json value should equal    ${resp}    /success    true
+    ${s_appwhitelist_id}    get json value    ${resp}    /data/id
+    set suite variable    ${s_appwhitelist_id}    ${s_appwhitelist_id}
+    set suite variable    ${PackagePath}    ${PackagePath}
+
+搜索APP列表
+    #搜索添加的APP列表
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=10&keywords=${AppName}    /appwhitelist/search
+    json value should equal    ${resp}    /total    1
+    json value should equal    ${resp}    /rows/0/id    ${s_appwhitelist_id}
+
+编辑APP列表
+    #编辑已添加的APP列表
+    ${edit_strings}    generate random string    15    [LETTERS][NUMBERS]
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=${s_appwhitelist_id}&appName=${AppName}&packagePath=${PackagePath}&securityMd5=1&appType=0&useStatus=0&description=${edit_strings}    /appwhitelist/edit
+    json value should equal    ${resp}    /success    true
+    json value should equal    ${resp}    /data/id    ${s_appwhitelist_id}
+    json value should equal    ${resp}    /data/description    "${edit_strings}"
+
+删除APP列表
+    #删除已添加APP列表
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    \    /appwhitelist/delete${s_appwhitelist_id}
+    json value should equal    ${resp}    /success    true
+
+每页十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=10&keywords=    /appwhitelist/search
+
+每页二十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=20&keywords=    /appwhitelist/search
+
+每页三十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=30&keywords=    /appwhitelist/search
+
+每页五十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=50&keywords=    /appwhitelist/search

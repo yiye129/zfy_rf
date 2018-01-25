@@ -1,0 +1,54 @@
+*** Settings ***
+Resource          ../HTTP关键字.txt
+
+*** Test Cases ***
+设备列表查看
+    #查看设备列表
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=10&keywords=    /device/search
+    ${result}    query    select * \ from \ \ ${table_device} where company_id=4
+    ${result}    Convert To String    ${result}
+    ${result}    split string    ${result}    ),
+    log    ${result}
+    ${row_number}    row count    select * \ from \ \ ${table_device} where company_id=4
+    ${total}    get json value    ${resp}    /total
+    should be equal as strings    ${total}    ${row_number}
+
+添加设备
+    #获取一个随机账户名
+    ${device_mac}    generate random string    15    [NUMBERS]
+    set suite variable    ${device_mac}    ${device_mac}
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=&mac=${device_mac}&fullName=测试创建MAC:${device_mac}&batchCode=1&factoryTime=1%2F1%2F2001&warranty=1&useStatus=0&executorgroupName=&description=&type=1    /device/edit
+    json value should equal    ${resp}    /success    true
+    ${s_device_id}    get json value    ${resp}    /data/id
+    set suite variable    ${s_device_id}    ${s_device_id}
+
+搜索设备
+    #搜索添加的设备
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=10&keywords=${device_mac}    /device/search
+    json value should equal    ${resp}    /total    1
+    json value should equal    ${resp}    /rows/0/id    ${s_device_id}
+
+编辑设备
+    #编辑已添加的设备
+    ${edit_strings}    generate random string    8    [LETTERS][NUMBERS]
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=${s_device_id}&mac=${device_mac}&fullName=编辑设备:${device_mac}&batchCode=1&factoryTime=5%2F4%2F2017&warranty=44&useStatus=0&executorgroupName=%E6%89%A7%E6%B3%95%E4%B8%80%E4%B8%AD%E9%98%9F111&description=${edit_strings}&type=1    /device/edit
+    json value should equal    ${resp}    /success    true
+    json value should equal    ${resp}    /data/id    ${s_device_id}
+    json value should equal    ${resp}    /data/description    "${edit_strings}"
+
+删除设备
+    #删除已添加设备
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    \    /device/delete${s_device_id}
+    json value should equal    ${resp}    /success    true
+
+每页十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=10&keywords=    /device/search
+
+每页二十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=20&keywords=    /device/search
+
+每页三十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=30&keywords=    /device/search
+
+每页五十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=50&keywords=    /device/search

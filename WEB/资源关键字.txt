@@ -1,0 +1,17 @@
+*** Variables ***
+${zfy_url}        ${本机服务器}
+${JSESSIONID}     0E179B5E471A1E8CFAB7F3931AC5880E
+${global_user_id}    ${EMPTY}
+${global_executorgroup_id}    ${EMPTY}
+${global_device_id}    ${EMPTY}
+${本机服务器}          http://192.168.0.137:6060    #本机服务器
+${外网服务器}          http://123.207.119.247:6060    #外网服务器
+&{DatabaseInfor}    DatabaseName=zfy-source    DatabaseUser=root    Databasepassword=${EMPTY}    DatabaseIp=192.168.0.107    DatabasePort=3306    #数据库名称|数据库用户名|数据库密码|数据库ip地址|数据库端口
+${DB_Name}        zfy-source    #数据库名称
+${DB_UserName}    root    #数据库用户名
+${DB_Pwd}         ${EMPTY}    #数据库访问密码
+${DB_Host}        192.168.0.107    #数据库IP地址
+${DB_Port}        3306    #数据库端口
+${table_user}     admin_user    #用户数据表
+${table_device}    zfy_device    #设备数据表
+${table_executorgroup}    zfy_executor_group    #执法部门数据表

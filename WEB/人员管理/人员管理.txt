@@ -1,0 +1,39 @@
+*** Settings ***
+Resource          ../HTTP关键字.txt
+Resource          人员管理业务关键字.txt
+
+*** Test Cases ***
+人员管理列表查看
+    #关键字 \ 查看列表    #参数 \ pagesize    \    # pagesize = 10    # pagesize = 20    # pagesize = 30    # pagesize = 50
+    :FOR    ${i}    in    10    20    30    50
+    \    查看列表    ${i}
+
+添加人员管理
+    #添加人员
+    #获取一个随机账户名
+    ${loginUsername}    generate random string    6    [LETTERS][NUMBERS]
+    set suite variable    ${loginUsername}    test_${loginUsername}
+    ${password}    generate random string    6    [NUMBERS]
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=&loginUsername=${loginUsername}&realName=${loginUsername}&password=${password}&type=1&boundCellphone=1111&hireStatus=0&leaderLevel=0&executorgroupName=&canExecute=1&description=&canIntercom=1&level=9    /system/user/edit
+    json value should equal    ${resp}    /success    true
+    ${s_user_id}    get json value    ${resp}    /data/id
+    set suite variable    ${s_user_id}    ${s_user_id}
+
+搜索人员管理
+    #搜索添加的人员管理
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=10&keywords=${loginUsername}    /system/user/search
+    json value should equal    ${resp}    /total    1
+    json value should equal    ${resp}    /rows/0/id    ${s_user_id}
+
+编辑人员管理
+    #编辑已添加的人员管理
+    ${edit_strings}    generate random string    8    [LETTERS][NUMBERS]
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=${s_user_id}&loginUsername=${loginUsername}&realName=${loginUsername}&password=b59c67bf196a4758191e42f76670ceba&type=1&boundCellphone=1111&hireStatus=0&leaderLevel=0&executorgroupName=%E6%89%A7%E6%B3%95%E4%B8%80%E4%B8%AD%E9%98%9F111&canExecute=1&description=${edit_strings}&canIntercom=1&level=9    /system/user/edit
+    json value should equal    ${resp}    /success    true
+    json value should equal    ${resp}    /data/id    ${s_user_id}
+    json value should equal    ${resp}    /data/description    "${edit_strings}"
+
+删除人员管理
+    #删除已添加人员管理
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    \    /system/user/delete${s_user_id}
+    json value should equal    ${resp}    /success    true

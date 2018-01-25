@@ -1,0 +1,151 @@
+*** Settings ***
+Library           Selenium2Library
+Library           String
+Resource          资源关键字.txt
+Library           RequestsLibrary
+Library           DatabaseLibrary
+Library           HttpLibrary.HTTP
+
+*** Keywords ***
+Http Post Requests
+    [Arguments]    ${contenttype}    ${bodydata}    ${url}
+    Comment    ${header}    Create Dictionary    Content-Type=${contenttype}
+    Comment    ${cookie}    Create Dictionary    JSESSIONID=${JSESSIONID}
+    #创建body数据（json格式）
+    ${data}    Set Variable    ${bodydata}
+    Log    ${data}
+    #创建一个http会话
+    Comment    Create Session    zfy    ${zfy_url}    headers=${header}    cookies=${cookie}
+    #发送post请求
+    ${responsedata}    Post Request    zfy    ${url}    data=${data}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${responsedata.status_code}    200
+    #格式转换成UTF-8
+    Comment    ${responsedata}    Decode Bytes To String    ${addr}    UTF-8
+    Comment    Delete All Sessions
+    [Return]    ${responsedata}
+
+SendGet_Recv200
+    [Arguments]    ${url}
+    [Documentation]    描述：把发送的get请求转换成UTF-8
+    ...
+    ...    ${jsessionid} 表示登录后的jsessionid
+    ...    ${url}表示发送get请求的url地址
+    ...
+    ...    返回的是响应数据
+    ...
+    ...    author：邱小叶
+    #创建头文件和cookie（字典型）
+    ${header}    Create Dictionary    Content-Type=application/json;charset=UTF-8
+    #发送
+    ${addr}    Get Request    zfy    ${url}    headers=${header}
+    log    ${addr.status_code}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${addr.status_code}    200
+    #转换成中文
+    ${responsedata}    Decode Bytes To String    ${addr.content}    UTF-8
+    [Return]    ${responsedata}
+
+SendPost_Recv200
+    [Arguments]    ${contenttype}    ${bodydata}    ${url}
+    [Documentation]    描述：把发送的post请求转换成UTF-8
+    ...
+    ...    ${jsessionid} 表示登录后的jsessionid
+    ...    ${url}表示发送get请求的url地址
+    ...
+    ...    返回的是响应数据
+    ...
+    ...    author：邱小叶
+    #创建头文件和cookie（字典型）
+    ${header}    Create Dictionary    Content-Type=${contenttype}
+    #创建body数据（json格式）
+    ${data}    Set Variable    ${bodydata}
+    #发送post请求
+    ${addr}    Post Request    zfy    ${url}    data=${data}    headers=${header}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${addr.status_code}    200
+    #格式转换成UTF-8
+    ${responsedata}    Decode Bytes To String    ${addr.content}    UTF-8
+    [Return]    ${responsedata}
+
+SendDelete_Recv200
+    [Arguments]    ${url}
+    [Documentation]    描述：发送一个DELETE请求，返回response和响应状态
+    ...
+    ...    ${jsessionid} 表示登录后的jsessionid
+    ...    ${url}表示发送get请求的url地址
+    ...
+    ...    返回的是响应数据
+    ...
+    ...    author：邱小叶
+    #创建头文件和cookie（字典型）
+    ${header}    Create Dictionary    Content-Type=application/json;charset=UTF-8
+    #发送delete请求
+    ${addr}    Delete Request    zfy    ${url}    headers=${header}
+    log    ${addr.status_code}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${addr.status_code}    200
+    #格式转换成UTF-8
+    ${responsedata}    Decode Bytes To String    ${addr.content}    UTF-8
+    [Return]    ${responsedata}
+
+SendPut_Recv200
+    [Arguments]    ${contenttype}    ${bodydata}    ${url}
+    #创建头文件和cookie（字典型）
+    ${header}    Create Dictionary    Content-Type=${contenttype}
+    #创建body数据（json格式）
+    ${data}    Set Variable    ${bodydata}
+    #发送post请求
+    ${addr}    Put Request    zfy    ${url}    data=${data}    headers=${header}
+    #检查点（响应状态为200）
+    Should Be Equal As Strings    ${addr.status_code}    200
+    [Return]    ${addr.content}
+
+CreateConversation
+    ${header}    Create Dictionary    Content-Type=application/x-www-form-urlencoded; charset=UTF-8
+    ${cookie}    Create Dictionary    JSESSIONID=${JSESSIONID}
+    #创建一个http会话
+    Create Session    zfy    ${zfy_url}    headers=${header}    cookies=${cookie}
+    Comment    connect to database    pymysql    ${DB_Name}    ${DB_UserName}    ${DB_Pwd}    ${DB_Host}
+    ...    ${DB_Port}
+
+DeleteConversation
+    Delete All Sessions
+    Comment    Disconnect From Database
+
+add_executorgroup_data
+    #添加人员
+    ${loginUsername}    generate random string    6    [LETTERS][NUMBERS]
+    set suite variable    ${loginUsername}    test_create_user_${loginUsername}
+    ${password}    generate random string    6    [NUMBERS]
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=&loginUsername=${loginUsername}&realName=${loginUsername}&password=${password}&type=1&boundCellphone=1111&hireStatus=0&leaderLevel=0&executorgroupName=&canExecute=1&description=&canIntercom=1&level=9    /system/user/edit
+    json value should equal    ${resp}    /success    true
+    ${global_user_id}    get json value    ${resp}    /data/id
+    set global variable    ${global_user_id}    ${global_user_id}
+    log    ${global_user_id}
+    #添加设备
+    ${device_mac}    generate random string    15    [NUMBERS]
+    Comment    set suite variable    ${device_mac}    测试创建${device_id}
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=&mac=${device_mac}&fullName=test_createdevice_MAC:${device_mac}&batchCode=1&factoryTime=1%2F1%2F2001&warranty=1&useStatus=0&executorgroupName=&description=&type=1    /device/edit
+    json value should equal    ${resp}    /success    true
+    ${global_device_id}    get json value    ${resp}    /data/id
+    set global variable    ${global_device_id}    ${global_device_id}
+    #添加执法部门
+    ${executorgroup_name}    generate random string    6    [LETTERS]
+    set suite variable    ${executorgroup_name}    test_createexcutorgroup_${executorgroup_name}
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=&name=${executorgroup_name}&description=${executorgroup_name}&parentName=-1&groupMasterName=&groupViceMasterName=    /executorgroup/edit
+    json value should equal    ${resp}    /success    true
+    ${global_executorgroup_id}    get json value    ${resp}    /data/id
+    set global variable    ${global_executorgroup_id}    ${global_executorgroup_id}
+
+del_executorgroup_data
+    #删除已添加人员管理
+    log    ${global_device_id}
+    ${resp}    sendpost_recv200    \    \    /system/user/delete${global_user_id}
+    json value should equal    ${resp}    /success    true
+    #删除已添加执法部门
+    ${resp}    sendpost_recv200    \    \    /executorgroup/delete${global_executorgroup_id}
+    json value should equal    ${resp}    /success    true
+    #删除已添加设备
+    ${resp}    sendpost_recv200    \    \    /device/delete${global_device_id}
+    json value should equal    ${resp}    /success    true

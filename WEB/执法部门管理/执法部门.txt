@@ -1,0 +1,64 @@
+*** Settings ***
+Resource          ../HTTP关键字.txt
+
+*** Test Cases ***
+执法部门列表查看
+    #查看执法部门列表
+    Comment    SendGet_Recv200    /executorgroup
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=10&keywords=    /executorgroup/search
+    ${row_number}    row count    select * \ from \ \ ${table_executorgroup} where company_id=4
+    ${total}    get json value    ${resp}    /total
+    should be equal as strings    ${total}    ${row_number}
+
+添加执法部门
+    #获取一个随机账户名
+    ${executorgroup_name}    generate random string    6    [LETTERS]
+    set suite variable    ${executorgroup_name}    test_${executorgroup_name}
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=&name=${executorgroup_name}&description=${executorgroup_name}&parentName=-1&groupMasterName=&groupViceMasterName=    /executorgroup/edit
+    json value should equal    ${resp}    /success    true
+    ${s_executorgroup_id}    get json value    ${resp}    /data/id
+    set suite variable    ${s_executorgroup_id}    ${s_executorgroup_id}
+
+搜索执法部门
+    #搜索添加的执法部门
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=10&keywords=${executorgroup_name}    /executorgroup/search
+    json value should equal    ${resp}    /total    1
+    json value should equal    ${resp}    /rows/0/id    ${s_executorgroup_id}
+    json value should equal    ${resp}    /rows/0/name    "${executorgroup_name}"
+
+编辑执法部门
+    #编辑已添加的执法部门
+    ${executorgroup_edit_strings}    generate random string    8    [LETTERS][NUMBERS]
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    id=${global_executorgroup_id}&name=${executorgroup_name}&description=${executorgroup_edit_strings}&parentName=-1&groupMasterName=&groupViceMasterName=    /executorgroup/edit
+    json value should equal    ${resp}    /success    true
+    json value should equal    ${resp}    /data/id    ${global_executorgroup_id}
+    json value should equal    ${resp}    /data/description    "${executorgroup_edit_strings}"
+
+执法部门设备关联
+    log    ${global_user_id}
+    log    ${global_executorgroup_id}
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    existdevicelist=&selectabledevicelist=%2C${global_device_id}&executorgroupid=${global_executorgroup_id}    /device/editExecutorGroupAssociate
+    json value should equal    ${resp}    /success    true
+
+执法部门用户关联
+    log    ${global_user_id}
+    log    ${global_executorgroup_id}
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    existuserlist=&selectableuserlist=%2C${global_user_id}&executorgroupid=${global_executorgroup_id}    /system/user/editExecutorGroupAssociate
+    json value should equal    ${resp}    /success    true
+
+删除执法部门
+    #删除已添加执法部门
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    \    /executorgroup/delete${s_executorgroup_id}
+    json value should equal    ${resp}    /success    true
+
+每页十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=10&keywords=    /executorgroup/search
+
+每页二十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=20&keywords=    /executorgroup/search
+
+每页三十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=30&keywords=    /executorgroup/search
+
+每页五十条数据分页
+    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    pageNumber=1&pageSize=50&keywords=    /executorgroup/search
