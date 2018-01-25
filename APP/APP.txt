@@ -134,9 +134,3 @@ regterminal
     json value should equal    ${resp}    /message    "操作成功"
     Comment    json value should equal    ${resp}    /data/isRegistered    true
     Comment    json value should equal    ${resp}    /data/password    '123456'
-
-feedbackTerminalStatus
-    CreateConversation
-    ${resp}    sendpost_recv200    application/x-www-form-urlencoded; charset=UTF-8    time=20180122235931&companyId=4&mac='00I71S1710180009'    /commandfeedback/feedbackTerminalStatus
-    json value should equal    ${resp}    /success    true
-    json value should equal    ${resp}    /message    "操作成功"
